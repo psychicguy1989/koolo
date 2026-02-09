@@ -2,25 +2,29 @@
 //
 // D2R Shop Bot - Standalone Claw Shopping Bot for Diablo 2 Resurrected
 //
-// This is a standalone program that ONLY does shopping at Anya (Drehya) in
-// Act 5 Harrogath for assassin claws with specific skills and stats.
+// This is a fully standalone program that does NOT require Koolo to be running.
+// It detects running D2R processes, attaches to them directly, and provides
+// a web GUI for controlling the shopping bot.
 //
 // Features:
-//   - Auto-launches D2R and configures legacy mode + optimal settings
-//   - Paths from any town to Harrogath via waypoint
-//   - Walks to Anya and opens her shop
-//   - Scans claws against configurable filter profiles
-//   - Refreshes vendor inventory via red portal or waypoint hop
-//   - Visual overlay with markers for waypoints, NPCs, and path
-//   - Comprehensive logging with QoL diagnostics
+//   - Detects running D2R clients and shows them in a dropdown
+//   - Step-by-step diagnostic tests before shopping
+//   - Walks to Anya and scans her shop for matching claws
+//   - Configurable claw filter profiles (skills, stats)
+//   - In-game settings configurator via ESC menu
+//   - Auto legacy mode switching
+//   - Random break system
+//   - Web overlay with markers and live stats
+//   - Comprehensive logging in the GUI
 //
 // Usage:
 //
-//	shopbot                       # Run with default config (shopbot.yaml)
-//	shopbot -config my_config.yaml # Run with custom config
-//	shopbot -generate-config      # Generate a default config file
-//	shopbot -list-profiles        # Show available claw filter profiles
-//	shopbot -validate             # Validate config without running
+//	shopbot                          Run with default config (shopbot.yaml)
+//	shopbot -config my_config.yaml   Run with custom config file
+//	shopbot -generate-config         Generate a default config file
+//	shopbot -list-profiles           Show available claw filter profiles
+//	shopbot -validate                Validate config without running
+//	shopbot -port 8099               Set GUI server port
 package main
 
 import (
@@ -39,6 +43,7 @@ var (
 	generateConfig = flag.Bool("generate-config", false, "Generate a default shopbot.yaml config file")
 	listProfiles   = flag.Bool("list-profiles", false, "List available claw filter profiles")
 	validateOnly   = flag.Bool("validate", false, "Validate config without running")
+	port           = flag.Int("port", 0, "GUI server port (overrides config)")
 	showHelp       = flag.Bool("h", false, "Show help")
 )
 
@@ -79,7 +84,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer logger.Close()
-	defer logger.PrintDiagnosticSummary()
 
 	printBanner()
 
@@ -91,51 +95,42 @@ func main() {
 		}
 	}
 
-	// Initialize and run launcher
-	launcher := shopbot.NewLauncher(cfg, logger)
-	launcher.PrintLaunchDiagnostics()
-
-	if cfg.AutoStartD2R {
-		if err := launcher.EnsureD2RRunning(); err != nil {
-			logger.LogError("launcher", fmt.Sprintf("Failed to start D2R: %v", err))
-			logger.Info("Please start D2R manually and re-run the shop bot")
-			os.Exit(1)
-		}
+	// Override port if specified via flag
+	guiPort := cfg.Overlay.OverlayPort
+	if *port > 0 {
+		guiPort = *port
+	}
+	if guiPort == 0 {
+		guiPort = 8099
 	}
 
-	if cfg.AutoLegacyMode {
-		launcher.ConfigureForLegacyMode()
-	}
-
-	// Create and start engine
-	engine := shopbot.NewEngine(cfg, logger)
-
-	// Handle graceful shutdown
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		<-sigCh
-		fmt.Println("\nShutting down gracefully...")
-		engine.Stop()
-	}()
-
-	// NOTE: The shop bot engine requires the Koolo supervisor infrastructure
-	// to be running (memory reader, HID, pathfinder, etc.).
-	// When run standalone, it integrates with a running Koolo instance's context.
-	//
-	// To use this as a fully standalone program, start Koolo first,
-	// then run this as a separate shopping-focused bot that uses the
-	// existing game connection.
-	logger.Info("Shop Bot engine initialized")
-	logger.Info("Waiting for game context from Koolo supervisor...")
-	logger.Info("Ensure Koolo is running and a character is in-game")
-
-	if err := engine.Run(); err != nil {
-		logger.LogError("engine", fmt.Sprintf("Shop bot error: %v", err))
+	// Create and start GUI server (standalone - no Koolo needed)
+	gui := shopbot.NewGUIServer(cfg, logger, guiPort)
+	if err := gui.Start(); err != nil {
+		logger.LogError("gui", fmt.Sprintf("Failed to start GUI server: %v", err))
 		os.Exit(1)
 	}
 
-	logger.Info("Shop bot finished successfully")
+	fmt.Println("=========================================")
+	fmt.Printf("  D2R Shop Bot GUI running at:\n")
+	fmt.Printf("  http://localhost:%d\n", guiPort)
+	fmt.Println("=========================================")
+	fmt.Println()
+	fmt.Println("Open the URL above in your browser to:")
+	fmt.Println("  1. Detect and attach to a D2R process")
+	fmt.Println("  2. Run diagnostic tests")
+	fmt.Println("  3. Configure in-game settings")
+	fmt.Println("  4. Start/stop shopping")
+	fmt.Println()
+	fmt.Println("Press Ctrl+C to stop the bot.")
+
+	// Wait for shutdown signal
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	<-sigCh
+
+	fmt.Println("\nShutting down...")
+	logger.Info("Shutdown signal received")
 }
 
 func loadOrCreateConfig(path string) (*shopbot.ShopBotConfig, error) {
@@ -164,14 +159,12 @@ func doGenerateConfig() {
 	}
 	fmt.Printf("Default config generated: %s\n", *configPath)
 	fmt.Println("\nEdit the config file to set your preferences:")
-	fmt.Println("  - d2r_path: Path to your D2R installation")
 	fmt.Println("  - character_name: Your character name")
 	fmt.Println("  - profiles: Claw filter profiles (skills, stats)")
-	fmt.Println("\nThen run: shopbot -config " + *configPath)
+	fmt.Println("\nThen run: shopbot")
 }
 
 func doListProfiles() {
-	// Try loading from config first
 	cfg, err := shopbot.LoadConfig(*configPath)
 	if err != nil {
 		cfg = &shopbot.ShopBotConfig{Profiles: shopbot.DefaultClawProfiles()}
@@ -188,7 +181,6 @@ func doListProfiles() {
 		fmt.Printf("[%d] %s [%s]\n", i+1, p.Name, status)
 		fmt.Printf("    %s\n", p.Description)
 
-		// Show claw types
 		var types []string
 		for _, ct := range p.ClawTypes {
 			if ct.Enabled {
@@ -197,7 +189,6 @@ func doListProfiles() {
 		}
 		fmt.Printf("    Claw types: %s\n", strings.Join(types, ", "))
 
-		// Show required skills
 		if len(p.RequiredSkills) > 0 {
 			fmt.Printf("    Required skills:\n")
 			for _, s := range p.RequiredSkills {
@@ -205,7 +196,6 @@ func doListProfiles() {
 			}
 		}
 
-		// Show optional skills
 		if len(p.OptionalSkills) > 0 {
 			fmt.Printf("    Optional skills (need %d):\n", p.MinOptionalCount)
 			for _, s := range p.OptionalSkills {
@@ -248,7 +238,8 @@ func printBanner() {
 |____/|_____|_| \_\ |____/|_| |_|\___/|_|     |____/ \___/  |_|
 
   Standalone Anya Claw Shopping Bot for Diablo 2 Resurrected
-  ==========================================================
+  ======================== v2.0 ============================
+  No Koolo required - fully standalone operation
 `
 	fmt.Println(banner)
 }
@@ -256,41 +247,33 @@ func printBanner() {
 func printUsage() {
 	fmt.Println("D2R Shop Bot - Standalone Claw Shopping Bot")
 	fmt.Println()
+	fmt.Println("This bot runs FULLY STANDALONE - no Koolo needed!")
+	fmt.Println("It provides a web GUI to control everything from your browser.")
+	fmt.Println()
 	fmt.Println("Usage:")
 	fmt.Println("  shopbot                          Run with default config (shopbot.yaml)")
 	fmt.Println("  shopbot -config path.yaml        Run with custom config file")
 	fmt.Println("  shopbot -generate-config         Generate a default config file")
 	fmt.Println("  shopbot -list-profiles           Show claw filter profiles")
 	fmt.Println("  shopbot -validate                Validate config without running")
+	fmt.Println("  shopbot -port 8099               Set GUI server port")
 	fmt.Println()
 	fmt.Println("Quick Start:")
 	fmt.Println("  1. Run 'shopbot -generate-config' to create shopbot.yaml")
-	fmt.Println("  2. Edit shopbot.yaml with your D2R path and character name")
-	fmt.Println("  3. Configure claw filter profiles for the skills you want")
-	fmt.Println("  4. Start Koolo, then run 'shopbot' to begin shopping")
+	fmt.Println("  2. Edit shopbot.yaml to configure claw filter profiles")
+	fmt.Println("  3. Start D2R and join a game with your assassin in Harrogath")
+	fmt.Println("  4. Run 'shopbot' and open http://localhost:8099 in your browser")
+	fmt.Println("  5. Click 'Detect D2R' to find your game, then 'Attach'")
+	fmt.Println("  6. Run diagnostic tests, then start shopping!")
 	fmt.Println()
 	fmt.Println("The bot will:")
-	fmt.Println("  - Auto-configure D2R settings for optimal bot operation")
-	fmt.Println("  - Switch to legacy graphics mode if configured")
+	fmt.Println("  - Detect running D2R.exe processes automatically")
+	fmt.Println("  - Attach to the selected D2R window (multi-client support)")
+	fmt.Println("  - Run step-by-step tests to verify everything works")
+	fmt.Println("  - Configure in-game settings and switch to legacy mode")
 	fmt.Println("  - Navigate from any town to Harrogath via waypoint")
-	fmt.Println("  - Walk to Anya and open her shop")
-	fmt.Println("  - Scan claws against your filter profiles")
+	fmt.Println("  - Walk to Anya and scan her shop for matching claws")
 	fmt.Println("  - Buy matching claws automatically")
 	fmt.Println("  - Refresh vendors and repeat")
-	fmt.Println("  - Show real-time overlay at http://localhost:8099")
-	fmt.Println()
-	fmt.Println("Available Assassin Skills for Filters:")
-	fmt.Println("  Traps: FireBlast, ShockWeb, BladeSentinel, ChargedBoltSentry,")
-	fmt.Println("         WakeOfFire, BladeFury, LightningSentry, WakeOfInferno,")
-	fmt.Println("         DeathSentry, BladeShield")
-	fmt.Println("  Shadow: ClawMastery, PsychicHammer, BurstOfSpeed, WeaponBlock,")
-	fmt.Println("          CloakOfShadows, Fade, ShadowWarrior, MindBlast,")
-	fmt.Println("          Venom, ShadowMaster")
-	fmt.Println("  Martial: TigerStrike, DragonTalon, FistsOfFire, DragonClaw,")
-	fmt.Println("           CobraStrike, ClawsOfThunder, BladesOfIce, DragonTail,")
-	fmt.Println("           DragonFlight, PhoenixStrike")
-	fmt.Println()
-	fmt.Println("Additional Stats for Filters:")
-	fmt.Println("  ias, fcr, fhr, frw, enhanceddamage, mindamage, maxdamage,")
-	fmt.Println("  lifeleech, manaleech, sockets")
+	fmt.Println("  - Take random breaks if configured")
 }
