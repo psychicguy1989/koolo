@@ -245,3 +245,14 @@ backtotown:
   noHpPotions: true
   noMpPotions: false
   mercDied: true
+
+# Claw Shopper - Shops Anya in Act 5 for specific assassin claw bases
+# Refreshes her inventory via the red portal to Nihlathak's Temple
+clawShopper:
+  enabled: false
+  max_attempts: 0       # 0 = unlimited
+  min_gold_reserve: 50000
+  runic_talons: true
+  greater_talons: true
+  feral_claws: true
+  suwayyah: false

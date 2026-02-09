@@ -235,6 +235,7 @@
             <a href="#companion-settings" aria-label="Companion" title="Companion"><i class="bi bi-people"></i><span class="nav-text">Companion</span></a>
             <a href="#run-settings" aria-label="Runs" title="Runs"><i class="bi bi-play-circle"></i><span class="nav-text">Runs</span></a>
             <a href="#gambling-settings" aria-label="Gambling" title="Gambling"><i class="bi bi-cash-coin"></i><span class="nav-text">Gambling</span></a>
+            <a href="#claw-shopper-settings" aria-label="Claw Shopper" title="Claw Shopper"><i class="bi bi-scissors"></i><span class="nav-text">Claw Shopper</span></a>
             <a href="#muling-settings" aria-label="Muling" title="Muling"><i class="bi bi-box-seam"></i><span class="nav-text">Muling</span></a>
             <a href="#runeword-settings" aria-label="Runeword" title="Runeword"><i class="bi bi-gem"></i><span class="nav-text">Runeword</span></a>
             <a href="#cube-recipes" aria-label="Cube" title="Cube"><i class="bi bi-box"></i><span class="nav-text">Cube</span></a>
@@ -1778,6 +1779,27 @@
                 <input type="text" name="gamblingItems" value="{{ range $i, $v := .Config.Gambling.Items }}{{ if gt $i 0 }}, {{ end }}{{$v}}{{ end }}" placeholder="coronet, circlet, amulet"/>
                 <small>Example: coronet, circlet, amulet</small>
             </label>
+            <h3 id="claw-shopper-settings"><i class="bi bi-scissors section-icon" aria-hidden="true"></i>Claw Shopper</h3>
+            <p>Shop Anya (Drehya) in Act 5 for specific assassin claw base types. Refreshes her inventory via the red portal to Nihlathak's Temple. Add <code>claw_shopper</code> to your enabled runs.</p>
+            <label>
+                <input type="checkbox" name="clawShopperEnabled" {{ if .Config.ClawShopper.Enabled }}checked{{ end }}/>
+                Enabled
+            </label>
+            <label>
+                Max Attempts (0 = unlimited):
+                <input type="number" name="clawShopperMaxAttempts" value="{{ .Config.ClawShopper.MaxAttempts }}" min="0"/>
+            </label>
+            <label>
+                Min Gold Reserve:
+                <input type="number" name="clawShopperMinGoldReserve" value="{{ .Config.ClawShopper.MinGoldReserve }}" min="0"/>
+            </label>
+            <fieldset>
+                <legend>Claw Types to Buy</legend>
+                <label><input type="checkbox" name="clawShopperRunicTalons" {{ if .Config.ClawShopper.RunicTalons }}checked{{ end }}/> Runic Talons</label>
+                <label><input type="checkbox" name="clawShopperGreaterTalons" {{ if .Config.ClawShopper.GreaterTalons }}checked{{ end }}/> Greater Talons</label>
+                <label><input type="checkbox" name="clawShopperFeralClaws" {{ if .Config.ClawShopper.FeralClaws }}checked{{ end }}/> Feral Claws</label>
+                <label><input type="checkbox" name="clawShopperSuwayyah" {{ if .Config.ClawShopper.Suwayyah }}checked{{ end }}/> Suwayyah</label>
+            </fieldset>
             <h3 id="muling-settings"><i class="bi bi-box-seam section-icon" aria-hidden="true"></i>Muling</h3>
             <p>Configure automatic muling to transfer items from this character to mule characters. Items will be moved from shared stash tabs (2-4) to the mule's private stash (tab 1).</p>
             <label>

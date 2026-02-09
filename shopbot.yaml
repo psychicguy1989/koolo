@@ -1,0 +1,173 @@
+d2r_path: C:\Program Files (x86)\Diablo II Resurrected
+auto_start_d2r: true
+auto_legacy_mode: true
+auto_configure_d2r: true
+window_width: 1280
+window_height: 720
+username: "StrongFundamentals@protonmail.com"
+password: "NCmdAuD7qUY4%DDQ"
+realm: us.actual.battle.net
+auth_mode: token
+character_name: "RoastedSandvich"
+difficulty: hell
+game_name_base: shopmarty
+game_password: "mhx"
+refreshes_per_session: 100
+min_gold_reserve: 50000
+auto_create_game: true
+games_per_session: 0
+delay_between_games: 5
+start_act: 5
+use_waypoint: true
+pathing_timeout: 30
+overlay:
+    enabled: true
+    show_waypoints: true
+    show_npcs: true
+    show_player_pos: true
+    show_path_lines: true
+    show_anya_marker: true
+    show_item_highlight: true
+    marker_size: 8
+    refresh_rate_ms: 100
+    overlay_port: 8099
+logging:
+    level: info
+    log_to_file: true
+    log_dir: logs/shopbot
+    max_log_size_mb: 50
+    verbose: false
+    log_pathing: true
+    log_shopping: true
+    log_game_state: true
+profiles:
+    - name: Godly Trap Claws
+      enabled: true
+      description: Look for +3 Traps claws with Lightning Sentry and Death Sentry
+      claw_types:
+        - name: GreaterTalons
+          enabled: true
+        - name: RunicTalons
+          enabled: true
+        - name: FeralClaws
+          enabled: true
+        - name: ScissorsQuhab
+          enabled: true
+      required_skills:
+        - skill_name: LightningSentry
+          min_level: 3
+      optional_skills:
+        - skill_name: DeathSentry
+          min_level: 3
+        - skill_name: FireBlast
+          min_level: 3
+        - skill_name: ShockWeb
+          min_level: 3
+        - skill_name: ChargedBoltSentry
+          min_level: 3
+        - skill_name: WakeOfFire
+          min_level: 3
+        - skill_name: WakeOfInferno
+          min_level: 3
+      min_optional_count: 1
+      min_total_skills: 6
+      stat_requirements: []
+      max_price: 0
+      buy_magic: true
+      buy_rare: false
+    - name: Good Trap Claws
+      enabled: true
+      description: Buy any claws with +2 or more to Lightning Sentry
+      claw_types:
+        - name: GreaterTalons
+          enabled: true
+        - name: RunicTalons
+          enabled: true
+        - name: FeralClaws
+          enabled: true
+        - name: ScissorsQuhab
+          enabled: true
+        - name: WristSword
+          enabled: true
+        - name: Claws
+          enabled: true
+      required_skills:
+        - skill_name: LightningSentry
+          min_level: 2
+      optional_skills:
+        - skill_name: DeathSentry
+          min_level: 1
+        - skill_name: WakeOfFire
+          min_level: 1
+        - skill_name: MindBlast
+          min_level: 1
+      min_optional_count: 0
+      min_total_skills: 3
+      stat_requirements: []
+      max_price: 0
+      buy_magic: true
+      buy_rare: true
+    - name: Martial Arts Claws
+      enabled: false
+      description: Shopping for martial arts assassin claws
+      claw_types:
+        - name: GreaterTalons
+          enabled: true
+        - name: RunicTalons
+          enabled: true
+        - name: FeralClaws
+          enabled: true
+      required_skills:
+        - skill_name: PhoenixStrike
+          min_level: 2
+      optional_skills:
+        - skill_name: TigerStrike
+          min_level: 2
+        - skill_name: DragonTalon
+          min_level: 2
+        - skill_name: DragonClaw
+          min_level: 2
+        - skill_name: CobraStrike
+          min_level: 2
+        - skill_name: ClawsOfThunder
+          min_level: 2
+        - skill_name: BladesOfIce
+          min_level: 2
+        - skill_name: Venom
+          min_level: 1
+      min_optional_count: 1
+      min_total_skills: 5
+      stat_requirements: []
+      max_price: 0
+      buy_magic: true
+      buy_rare: true
+    - name: Shadow Discipline Claws
+      enabled: false
+      description: Claws with Burst of Speed, Fade, Venom, Mind Blast
+      claw_types:
+        - name: GreaterTalons
+          enabled: true
+        - name: RunicTalons
+          enabled: true
+        - name: FeralClaws
+          enabled: true
+      required_skills: []
+      optional_skills:
+        - skill_name: BurstOfSpeed
+          min_level: 2
+        - skill_name: Fade
+          min_level: 2
+        - skill_name: Venom
+          min_level: 2
+        - skill_name: MindBlast
+          min_level: 2
+        - skill_name: ShadowMaster
+          min_level: 2
+        - skill_name: WeaponBlock
+          min_level: 2
+      min_optional_count: 2
+      min_total_skills: 5
+      stat_requirements: []
+      max_price: 0
+      buy_magic: true
+      buy_rare: true

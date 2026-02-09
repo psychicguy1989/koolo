@@ -138,6 +138,8 @@ func BuildRun(run string) Run {
 		return NewRakanishu()
 	case string(config.ShoppingRun):
 		return NewShopping()
+	case string(config.ClawShopperRun):
+		return NewClawShopper()
 	//Quests Runs
 	case string(config.DenRun):
 		return NewDen()

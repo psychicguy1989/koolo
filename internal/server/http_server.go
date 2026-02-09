@@ -2352,7 +2352,7 @@ func getAllRunIDs() []string {
 		"spider_cavern", "arachnid_lair", "mephisto", "tristram",
 		"nihlathak", "summoner", "baal", "eldritch", "lower_kurast_chest",
 		"diablo", "leveling", "leveling_sequence", "quests", "terror_zone",
-		"utility", "shopping",
+		"utility", "shopping", "claw_shopper",
 	}
 }
 
@@ -2822,6 +2822,7 @@ func (s *HttpServer) characterSettings(w http.ResponseWriter, r *http.Request) {
 		cfg.Game.Runs = enabledRuns
 
 		s.applyShoppingFromForm(r.Form, cfg)
+		s.applyClawShopperFromForm(r.Form, cfg)
 
 		cfg.Game.Cows.OpenChests = r.Form.Has("gameCowsOpenChests")
 
@@ -3288,6 +3289,23 @@ func (s *HttpServer) applyShoppingFromForm(values url.Values, cfg *config.Charac
 	cfg.Shopping.VendorAnya = values.Has("shoppingVendorAnya")
 }
 
+// applyClawShopperFromForm parses claw shopper-specific fields from the form
+func (s *HttpServer) applyClawShopperFromForm(values url.Values, cfg *config.CharacterCfg) {
+	cfg.ClawShopper.Enabled = values.Has("clawShopperEnabled")
+
+	if v, err := strconv.Atoi(values.Get("clawShopperMaxAttempts")); err == nil {
+		cfg.ClawShopper.MaxAttempts = v
+	}
+	if v, err := strconv.Atoi(values.Get("clawShopperMinGoldReserve")); err == nil {
+		cfg.ClawShopper.MinGoldReserve = v
+	}
+
+	cfg.ClawShopper.RunicTalons = values.Has("clawShopperRunicTalons")
+	cfg.ClawShopper.GreaterTalons = values.Has("clawShopperGreaterTalons")
+	cfg.ClawShopper.FeralClaws = values.Has("clawShopperFeralClaws")
+	cfg.ClawShopper.Suwayyah = values.Has("clawShopperSuwayyah")
+}
+
 func (s *HttpServer) applyRunDetails(values url.Values, cfg *config.CharacterCfg, runs []string) {
 	for _, runID := range runs {
 		switch runID {
@@ -3471,6 +3489,8 @@ func (s *HttpServer) applyRunDetails(values url.Values, cfg *config.CharacterCfg
 			}
 		case "shopping":
 			// Handled in applyShoppingFromForm, repeated here just for run detail completeness if needed
+		case "claw_shopper":
+			// Handled in applyClawShopperFromForm
 		}
 	}
 }

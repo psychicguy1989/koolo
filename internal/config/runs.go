@@ -43,6 +43,7 @@ const (
 	FireEyeRun          Run = "fire_eye"
 	RakanishuRun        Run = "rakanishu"
 	ShoppingRun         Run = "shopping"
+	ClawShopperRun      Run = "claw_shopper"
 	//Leveling Sequence
 	DenRun                   Run = "den"
 	BloodravenRun            Run = "bloodraven"
@@ -121,6 +122,7 @@ var AvailableRuns = map[Run]interface{}{
 	UtilityRun:          nil,
 	FireEyeRun:          nil,
 	ShoppingRun:         nil,
+	ClawShopperRun:      nil,
 	OrgansRun:           nil,
 	PandemoniumRun:      nil,
 	DevelopmentRun:      nil,

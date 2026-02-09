@@ -557,7 +557,8 @@ type CharacterCfg struct {
 		MercDied        bool `yaml:"mercDied"`
 		EquipmentBroken bool `yaml:"equipmentBroken"`
 	} `yaml:"backtotown"`
-	Shopping ShoppingConfig `yaml:"shopping"`
+	Shopping    ShoppingConfig    `yaml:"shopping"`
+	ClawShopper ClawShopperConfig `yaml:"clawShopper"`
 	Runtime  struct {
 		Rules     nip.Rules   `yaml:"-"`
 		TierRules []int       `yaml:"-"`
