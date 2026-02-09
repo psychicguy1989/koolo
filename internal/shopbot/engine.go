@@ -23,13 +23,14 @@ import (
 
 // Engine is the main shop bot controller.
 type Engine struct {
-	cfg       *ShopBotConfig
-	logger    *ShopLogger
-	filter    *ClawFilter
-	overlay   *OverlayServer
-	ctx       *context.Status
-	running   bool
-	stopCh    chan struct{}
+	cfg             *ShopBotConfig
+	logger          *ShopLogger
+	filter          *ClawFilter
+	overlay         *OverlayServer
+	ctx             *context.Status
+	standaloneCtx   *context.Status
+	running         bool
+	stopCh          chan struct{}
 }
 
 // NewEngine creates a new shop bot engine.
@@ -47,6 +48,12 @@ func NewEngine(cfg *ShopBotConfig, logger *ShopLogger) *Engine {
 		overlay: overlay,
 		stopCh:  make(chan struct{}),
 	}
+}
+
+// SetStandaloneContext sets the game context for standalone (no-Koolo) operation.
+// Must be called before Run().
+func (e *Engine) SetStandaloneContext(ctx *context.Status) {
+	e.standaloneCtx = ctx
 }
 
 // Run is the main entry point - starts the full shop bot loop.
@@ -78,11 +85,16 @@ func (e *Engine) Run() error {
 		)
 	}
 
-	// Wait for game context to be available
-	e.logger.Info("Waiting for game context...")
-	e.ctx = context.Get()
+	// Attach standalone context to this goroutine if available
+	if e.standaloneCtx != nil {
+		e.standaloneCtx.Context.AttachRoutine(context.PriorityNormal)
+		e.ctx = context.Get()
+	} else {
+		e.logger.Info("Waiting for game context...")
+		e.ctx = context.Get()
+	}
 	if e.ctx == nil {
-		return fmt.Errorf("no game context available - ensure Koolo is initialized")
+		return fmt.Errorf("no game context available - attach to a D2R process first")
 	}
 
 	gameCount := 0
